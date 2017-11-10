@@ -1,7 +1,7 @@
 #include <DHT.h>
-#include <Adafruit_Sensor.h>
 #include <Adafruit_DotStar.h>
 #include <Adafruit_SSD1306.h>
+#include <Adafruit_GFX.h>
 #include <SPI.h>
 #include <Wire.h>
 #include "wiring_private.h"
@@ -15,16 +15,16 @@
 #define DATA_PIN                    7
 #define CLOCK_PIN                   8
 #define MISO_PIN                    30
-#define RESET_PIN                   1
 
-#undef SSD1306_128_32
-#define SSD1306_128_64
+#if (SSD1306_LCDHEIGHT != 64)
+#error("Height incorrect, please fix Adafruit_SSD1306.h!");
+#endif
 
 DHT dht(DHT_PIN, DHT_TYPE, DHT_TIMING);
 Adafruit_DotStar pixel(1, DATA_PIN, CLOCK_PIN, DOTSTAR_BRG);
 //SPIClass ledSPI(&sercom1, MISO_PIN, CLOCK_PIN, DATA_PIN, SPI_PAD_0_SCK_1, SERCOM_RX_PAD_2);
 //Adafruit_DotStar pixel(1, &ledSPI, DOTSTAR_BRG); // Hardware SPI
-Adafruit_SSD1306 display(RESET_PIN);
+Adafruit_SSD1306 display(-1);
 
 void setup() {
   Serial.begin(115200);
@@ -40,7 +40,7 @@ void setup() {
   pixel.setBrightness(128); // 0 - 255
   pixel.show();
 
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3D);
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3C, false);
   display.setTextSize(2);
   display.setTextColor(WHITE);
 
@@ -68,8 +68,10 @@ void loop() {
       Serial.print("[DHT] Humidity: "); Serial.print(h); Serial.println(" %");
 
       display.clearDisplay();
-      display.print("T: "); display.print(t); display.println(" ºC");
+      display.setCursor(0, 0);
+      display.print("T: "); display.print(t); display.println(" C");
       display.print("H: "); display.print(h); display.println(" %");
+      display.display();
 
       if (t > 22) {
         digitalWrite(RELAY_PIN, HIGH);
