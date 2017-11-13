@@ -38,6 +38,7 @@ void setup() {
   //pinPeripheral(MISO_PIN, PIO_SERCOM);
   pixel.begin();
   pixel.setBrightness(128); // 0 - 255
+  pixel.setPixelColor(1, 255, 255, 255);
   pixel.show();
 
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C, false);
@@ -53,8 +54,9 @@ void setup() {
 }
 
 void loop() {
-
   static unsigned long last_update = 0;
+  bool fan_on = false;
+
   if ((millis() - last_update > DHT_UPDATE_INTERVAL) || (last_update == 0)) {
     last_update = millis();
 
@@ -74,13 +76,19 @@ void loop() {
       display.display();
 
       if (t > 22) {
-        digitalWrite(RELAY_PIN, HIGH);
-        pixel.setPixelColor(1, 0xFF0000); // Red
-        pixel.show();
+        if (!fan_on) {
+          digitalWrite(RELAY_PIN, HIGH);
+          fan_on = true;
+          pixel.setPixelColor(1, 0xFF0000); // Red
+          pixel.show();
+        }
       } else {
-        digitalWrite(RELAY_PIN, LOW);
-        pixel.setPixelColor(1,  0x0000FF); // Blue
-        pixel.show();
+        if (fan_on) {
+          digitalWrite(RELAY_PIN, LOW);
+          fan_on = false;
+          pixel.setPixelColor(1,  0x0000FF); // Blue
+          pixel.show();
+        }
       }
     }
   }
